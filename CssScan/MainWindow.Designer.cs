@@ -126,7 +126,7 @@ namespace CssScan
             // 
             // Start
             // 
-            this.Start.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Start.Dock = System.Windows.Forms.DockStyle.Right;
             this.Start.Location = new System.Drawing.Point(835, 304);
             this.Start.Name = "Start";
             this.Start.Size = new System.Drawing.Size(100, 22);
@@ -242,6 +242,7 @@ namespace CssScan
             this.ClientSize = new System.Drawing.Size(952, 719);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.splitContainer1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainWindow";
             this.Text = "CSSScan";
             this.splitContainer1.Panel1.ResumeLayout(false);

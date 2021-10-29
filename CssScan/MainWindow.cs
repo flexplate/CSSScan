@@ -46,7 +46,7 @@ namespace CssScan
         #region Enums
 
         /// <summary>
-        /// This enum matches the indexes of the icons in the Style State Images collection, used to provide a state image for each record in the style treeview.
+        /// This enum matches the indices of the icons in the Style State Images collection, used to provide a state image for each record in the style treeview.
         /// </summary>
         public enum StateIcon
         {
