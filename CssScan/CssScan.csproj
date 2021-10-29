@@ -8,12 +8,23 @@
 		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
 		<GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
 		<AssemblyVersion>1.0.*</AssemblyVersion>
+		<AssemblyCopyright>© 2021 Daniel Price &amp; contributors</AssemblyCopyright>
+		<StartupObject>CssScan.Program</StartupObject>
+		<ApplicationIcon>logo.ico</ApplicationIcon>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <DefineConstants></DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="ExCSS" Version="4.1.0" />
 		<PackageReference Include="Fizzler.Systems.HtmlAgilityPack" Version="1.2.1" />
 		<PackageReference Include="Flurl" Version="3.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Properties\" />
 	</ItemGroup>
 
 
