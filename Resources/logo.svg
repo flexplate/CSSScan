@@ -46,9 +46,9 @@
      showgrid="false"
      showguides="false"
      inkscape:guide-bbox="true"
-     inkscape:zoom="2.3583333"
-     inkscape:cx="321.16"
-     inkscape:cy="33.405572"
+     inkscape:zoom="18.866666"
+     inkscape:cx="79.240847"
+     inkscape:cy="65.216012"
      inkscape:window-x="1912"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -74,51 +74,34 @@
        id="guide835"
        inkscape:locked="false" />
   </sodipodi:namedview>
-  <g
-     id="g833"
-     transform="matrix(0.2629717,0,0,0.2629717,-0.89657477,7.5094344)"
-     style="stroke-width:3.80269051">
-    <path
-       style="fill:#264de4;stroke-width:3.80269051"
-       inkscape:connector-curvature="0"
-       id="path2"
-       d="M 71.357,460.819 30.272,0 H 481.728 L 440.599,460.746 255.724,512 Z" />
-    <path
-       style="fill:#2965f1;stroke-width:3.80269051"
-       inkscape:connector-curvature="0"
-       id="path4"
-       d="M 405.388,431.408 440.536,37.678 H 256 v 435.146 z" />
-    <path
-       sodipodi:nodetypes="cccccccccccc"
-       style="fill:#ffffff;stroke-width:3.80269051"
-       inkscape:connector-curvature="0"
-       id="path8"
-       d="m 325.93947,258.9443 -70.40302,18.72073 v 58.8 l 123.23202,-33.81973 0.85,-9.549 6.18053,-69.3303 1.38,-15.176 8.91432,-99.96361 L 255.805,71.922553 v 56.517997 l 79.639,22.27445 z" />
-    <path
-       d="m 352.69816,293.09118 -67.60175,-11.43168 56.64866,122.27483 49.30989,-28.46908 z"
-       id="path831"
-       inkscape:connector-curvature="0"
-       style="fill:#ff2a2a;stroke-width:3.80269051"
-       sodipodi:nodetypes="ccccc" />
-    <path
-       sodipodi:nodetypes="ccccc"
-       style="fill:#ffffff;stroke:none;stroke-width:3.80269051"
-       inkscape:connector-curvature="0"
-       id="path837"
-       d="m 352.69816,293.09118 -67.60175,-11.43168 56.64866,122.27483 49.30989,-28.46908 z" />
-    <path
-       d="m 367.75612,312.3459 -65.44283,23.42214 33.24196,71.62261 64.9526,-24.70798 z"
-       id="path839"
-       inkscape:connector-curvature="0"
-       style="fill:#ffffff;stroke-width:3.80269051"
-       sodipodi:nodetypes="ccccc" />
-    <path
-       d="m 185.67053,258.9443 69.86592,18.72073 v 58.8 l -122.69492,-33.81973 -0.85,-9.549 L 125.811,223.766 124.431,208.59 115.51668,108.62639 255.805,71.922553 V 128.44055 L 176.166,150.715 Z"
-       id="path841"
-       inkscape:connector-curvature="0"
-       style="fill:#ebebeb;fill-opacity:1;stroke-width:3.80269051"
-       sodipodi:nodetypes="cccccccccccc" />
-  </g>
+  <path
+     d="M 17.868297,128.69179 7.0641045,7.5094344 H 125.78426 L 114.96849,128.67259 66.3516,142.15094 Z"
+     id="path2"
+     inkscape:connector-curvature="0"
+     style="fill:#264de4;stroke-width:1" />
+  <path
+     d="M 105.709,120.95753 114.95193,17.417682 H 66.42418 V 131.84877 Z"
+     id="path4"
+     inkscape:connector-curvature="0"
+     style="fill:#2965f1;stroke-width:1" />
+  <path
+     d="M 91.85306,84.58412 74.075713,81.577912 88.972707,113.73273 101.93981,106.24617 Z"
+     id="path837"
+     inkscape:connector-curvature="0"
+     style="fill:#ffffff;stroke:none;stroke-width:1"
+     sodipodi:nodetypes="ccccc" />
+  <path
+     sodipodi:nodetypes="ccccc"
+     style="fill:#ffffff;stroke-width:1"
+     inkscape:connector-curvature="0"
+     id="path839"
+     d="m 95.812877,89.647567 -17.209612,6.15936 8.741695,18.834723 17.0807,-6.4975 z" />
+  <path
+     sodipodi:nodetypes="cccccccccccc"
+     style="fill:#ebebeb;fill-opacity:1;stroke-width:1"
+     inkscape:connector-curvature="0"
+     id="path841"
+     d="m 47.92952,75.604457 18.37276,4.923022 V 95.990215 L 34.036988,87.096583 33.813462,84.585467 32.188158,66.35356 31.825257,62.362701 29.481043,36.075101 66.372901,26.42303 v 14.862634 l -20.942803,5.85755 z" />
   <flowRoot
      xml:space="preserve"
      id="flowRoot838"
@@ -135,4 +118,10 @@
        id="flowPara844"
        style="stroke-width:0.35443696">CSS<flowSpan
    style="fill:#4d4d4d"
-   id="flowSpan827">Scan</flowSpan></flowPara></flowRoot></svg>
+   id="flowSpan827">Scan</flowSpan></flowPara></flowRoot>  <path
+     d="M 84.816282,75.604457 66.30228,80.527479 v 15.462736 l 32.406534,-8.893632 0.223526,-2.511116 1.6253,-18.231907 0.36291,-3.990859 2.34421,-26.2876 -36.891859,-9.652071 v 14.862634 l 20.942803,5.85755 z"
+     id="path8"
+     inkscape:connector-curvature="0"
+     style="fill:#ffffff;stroke-width:1"
+     sodipodi:nodetypes="cccccccccccc" />
+</svg>
