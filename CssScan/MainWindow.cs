@@ -1,8 +1,11 @@
-﻿using ExCSS;
+﻿using CssScan.Types;
+using CssScan.Utilities;
+using ExCSS;
 using Fizzler.Systems.HtmlAgilityPack;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -19,7 +22,7 @@ namespace CssScan
         /// <summary>
         /// </summary>
         /// This collection stores the documents when they've been loaded. The string part of the key-value pair is the filename.
-        public List<KeyValuePair<string, HtmlAgilityPack.HtmlDocument>> Pages { get; set; }
+        public ObservableCollection<Scan> Scans { get; set; }
 
         #endregion Properties
 
@@ -31,14 +34,43 @@ namespace CssScan
 
             WebRequest.DefaultWebProxy.Credentials = CredentialCache.DefaultNetworkCredentials;
 
-            PageList.SelectedIndexChanged += PageList_SelectedIndexChanged;
+            PageList.AfterSelect += PageList_AfterSelect;
             Start.Click += Start_Click;
             AddFile.Click += AddFile_Click;
             AddURI.Click += AddUri_Click;
             RemovePage.Click += RemovePage_Click;
             Clear.Click += Clear_Click;
 
-            Pages = new List<KeyValuePair<string, HtmlAgilityPack.HtmlDocument>>();
+            Scans = new ObservableCollection<Scan>();
+            Scans.CollectionChanged += Scans_CollectionChanged;
+        }
+
+        private void Scans_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            PageList.Nodes.Clear();
+            foreach (var currentScan in Scans)
+            {
+                var PagesNode = new TreeNode(string.Format("Pages ({0})", currentScan.Pages.Count));
+                foreach (var page in currentScan.Pages)
+                {
+                    PagesNode.Nodes.Add(page.Key);
+                }
+
+                var StylesheetsNode = new TreeNode(string.Format("Stylesheets ({0})", currentScan.Stylesheets.Count));
+                foreach (var stylesheet in currentScan.Stylesheets)
+                {
+                    PagesNode.Nodes.Add(stylesheet.Uri);
+                }
+
+                var ScanNode = new TreeNode()
+                {
+                    Text = string.Format("{0} ({1} levels, {2})", currentScan.RootUri, currentScan.LevelsToParse, currentScan.RestrictToDomain ? "Staying on domain" : "Parsing external links"),
+                    Name = currentScan.Id.ToString()
+                };
+                ScanNode.Nodes.Add(PagesNode);
+                ScanNode.Nodes.Add(StylesheetsNode);
+                PageList.Nodes.Add(ScanNode);
+            }
         }
 
         #endregion Constructors
@@ -79,7 +111,11 @@ namespace CssScan
             OFD.Title = "Add File";
             if (OFD.ShowDialog() == DialogResult.OK)
             {
-                PageList.Items.AddRange(OFD.FileNames);
+                Scans.Add(new Scan()
+                {
+                    RootUri = OFD.FileName,
+                    LevelsToParse = 1
+                });
             }
         }
 
@@ -89,10 +125,10 @@ namespace CssScan
         private void AddUri_Click(object sender, EventArgs e)
         {
             string DefaultUri = IsValidWebUri(Clipboard.GetText()) ? Clipboard.GetText() : null;
-            string UserEntered = Prompt.ShowDialog("Enter the URI to add to the list", "Add URI", DefaultUri);
-            if (!string.IsNullOrWhiteSpace(UserEntered))
+            var NUF = new NewUriForm(DefaultUri);
+            if (NUF.ShowDialog() == DialogResult.OK)
             {
-                PageList.Items.Add(UserEntered);
+                Scans.Add(NUF.Scan);
             }
         }
 
@@ -101,120 +137,169 @@ namespace CssScan
         /// </summary>
         private void Clear_Click(object sender, EventArgs e)
         {
-            Pages.Clear();
+            Scans.Clear();
             StyleList.Nodes.Clear();
         }
 
         /// <summary>
-        /// Parse each file in the pages collection, get its stylesheets, test to see if they're used.
+        /// Parse each scan, get its stylesheets.
         /// </summary>
         private void GetStyles()
         {
             var Parser = new StylesheetParser();
-            for (int PageIndex = 0; PageIndex < Pages.Count; PageIndex++)
+            foreach (Scan CurrentScan in Scans)
             {
-                SetStatus("Getting stylesheets in page {0} of {1}.", PageIndex + 1, Pages.Count);
-                var item = Pages[PageIndex];
-                var PageNode = new TreeNode(item.Key);
-
-                // Get all stylesheets referenced externally to the document(<link rel="stylesheet" href="foo">).
-                var Links = item.Value.DocumentNode.Descendants("link").Where(l => l.GetAttributeValue("rel", "") == "stylesheet").ToList();
-                if (Links.Count == 0) { PageNode.Nodes.Add("No stylesheets."); }
-
-                // Iterate over the stylesheets.
-                for (int LinkIndex = 0; LinkIndex < Links.Count; LinkIndex++)
+                for (int PageIndex = 0; PageIndex < CurrentScan.Pages.Count; PageIndex++)
                 {
-                    SetStatus("Parsing Stylesheets: Page {0}/{1}, stylesheet {2}/{3}.", PageIndex + 1, Pages.Count, LinkIndex + 1, Links.Count);
-                    HtmlNode link = Links[LinkIndex];
-
-                    // Define somewhere for our CSS to go:
-                    string Css = "";
-
-                    using (var Client = new HttpClient())
+                    SetStatus("Getting stylesheets in page {0} of {1}.", PageIndex + 1, CurrentScan.Pages.Count);
+                    var item = CurrentScan.Pages.ElementAt(PageIndex);
+                    var Links = item.Value.DocumentNode.Descendants("link").Where(l => l.GetAttributeValue("rel", "") == "stylesheet").ToList();
+                    foreach (var link in Links)
                     {
-                        // First we've got to actually get the CSS file.
-                        // Can't get a stream without a full URI.
-                        var requestUri = Flurl.Url.Combine(item.Key, link.GetAttributeValue("href", ""));
-
-                        try
+                        // Define somewhere for our CSS to go:
+                        var Sheet = new StyleSheetUsage();
+                        string FullStylesheet = "";
+                        using (var Client = new HttpClient())
                         {
-                            // Get the CSS file from the link. This normally runs asynchronously but we're waiting for it to do its thing.
-                            var stream = Client.GetStreamAsync(requestUri).GetAwaiter().GetResult();
-                            var Reader = new StreamReader(stream);
-                            Css = Reader.ReadToEnd();
-                        }
-                        catch (HttpRequestException ex)
-                        {
-                            PageNode.StateImageIndex = (int)StateIcon.Error;
-                            PageNode.ToolTipText = "Error";
-                            PageNode.Nodes.Add(ex.Message);
-                        }
-                    }
+                            // First we've got to actually get the CSS file.
+                            Sheet.Uri = link.GetAttributeValue("href", "");
 
-                    // Read styles into treeview.
-                    var Stylesheet = Parser.Parse(Css);
-                    if (Stylesheet != null)
-                    {
-                        var SheetNode = new TreeNode(link.GetAttributeValue("href", "File"));
-                        int UsedStyleCount = 0;
 
-                        // Iterate over selectors in the stylesheet, see if they're used in the page they're linked from.
-                        var Rules = Stylesheet.StyleRules.ToList();
-                        for (int RuleIndex = 0; RuleIndex < Rules.Count; RuleIndex++)
-                        {
-                            SetStatus("Parsing Stylesheets: Page {0}/{1}, stylesheet {2}/{3}, rule {4}/{5}.", PageIndex + 1, Pages.Count, LinkIndex + 1, Links.Count, RuleIndex, Rules.Count);
-                            IStyleRule Style = Rules[RuleIndex];
-                            StateIcon StyleState = StateIcon.Cross;
-                            string Usage = "Unused";
-                            try
+                            // Can't get a stream without a full URI. Combine relative URIs with the page's to get the absolute URI for the CSS.
+                            if (Uri.IsWellFormedUriString(link.GetAttributeValue("href", ""), UriKind.Relative))
                             {
-                                // If the selector appears in the document, we mark it as used.
-                                int TimesSelectorUsed = item.Value.DocumentNode.QuerySelectorAll(Style.SelectorText).Count();
-                                if (TimesSelectorUsed > 0)
+                                Sheet.Uri = Flurl.Url.Combine(item.Key, Sheet.Uri);
+                            }
+
+                            if (CurrentScan.Stylesheets.Any(s => s.Uri == Sheet.Uri) == false)
+                            {
+                                try
                                 {
-                                    StyleState = StateIcon.Tick;
-                                    Usage = string.Format("Used {0} time{1}.", TimesSelectorUsed, TimesSelectorUsed > 1 ? "s" : "");
-                                    UsedStyleCount++;
+                                    // Get the CSS file from the link. This normally runs asynchronously but we're waiting for it to do its thing.
+                                    var stream = Client.GetStreamAsync(Sheet.Uri).GetAwaiter().GetResult();
+                                    var Reader = new StreamReader(stream);
+                                    FullStylesheet = Reader.ReadToEnd();
+                                }
+                                catch (HttpRequestException ex)
+                                {
+                                    Sheet.HttpStatusCode = (int)ex.StatusCode;
                                 }
                             }
-                            catch (FormatException ex)
-                            {
-                                // Fizzler can't read everything. Show an error icon.
-                                StyleState = StateIcon.Error;
-                                Usage = ex.Message;
-                            }
-                            finally
-                            {
-                                TreeNode SelectorNode = new TreeNode(Style.SelectorText) { StateImageIndex = (int)StyleState };
-                                SelectorNode.ToolTipText = Usage;
-                                SheetNode.Nodes.Add(SelectorNode);
-                            }
                         }
 
-                        // Pick an icon for the sheet based on how many, if any, of the selectors in its stylesheets are used.
-                        if (UsedStyleCount == 0)
+                        // Read styles
+                        var Stylesheet = Parser.Parse(FullStylesheet);
+                        if (Stylesheet != null)
                         {
-                            // None are used.
-                            SheetNode.StateImageIndex = (int)StateIcon.Cross;
-                            SheetNode.ToolTipText = "Unused";
+                            Sheet.Rules.AddRange(Stylesheet.StyleRules.Select(r => new RuleUsage(r)));
                         }
-                        else if (UsedStyleCount < Stylesheet.StyleRules.Count())
-                        {
-                            // Some are used.
-                            SheetNode.StateImageIndex = (int)StateIcon.Half;
-                            SheetNode.ToolTipText = string.Format("{0} of {1} selectors used.", UsedStyleCount, Rules.Count);
-                        }
-                        else if (UsedStyleCount == Stylesheet.StyleRules.Count())
-                        {
-                            // All are used.
-                            SheetNode.StateImageIndex = (int)StateIcon.Tick;
-                            SheetNode.ToolTipText = string.Format("{0} of {1} selectors used.", UsedStyleCount, Rules.Count);
-                        }
-                        PageNode.Nodes.Add(SheetNode);
+
                     }
                 }
 
-                StyleList.Nodes.Add(PageNode);
+                /*{
+                    SetStatus("Getting stylesheets in page {0} of {1}.", PageIndex + 1, scan.Pages.Count);
+                    var item = scan.Pages.ElementAt(PageIndex);
+                    var PageNode = new TreeNode(item.Key);
+
+                    // Get all stylesheets referenced externally to the document(<link rel="stylesheet" href="foo">).
+                    var Links = item.Value.DocumentNode.Descendants("link").Where(l => l.GetAttributeValue("rel", "") == "stylesheet").ToList();
+                    if (Links.Count == 0) { PageNode.Nodes.Add("No stylesheets."); }
+
+                    // Iterate over the stylesheets.
+                    for (int LinkIndex = 0; LinkIndex < Links.Count; LinkIndex++)
+                    {
+                        SetStatus("Parsing Stylesheets: Page {0}/{1}, stylesheet {2}/{3}.", PageIndex + 1, scan.Pages.Count, LinkIndex + 1, Links.Count);
+                        HtmlNode link = Links[LinkIndex];
+
+                        // Define somewhere for our CSS to go:
+                        string Css = "";
+
+                        using (var Client = new HttpClient())
+                        {
+                            // First we've got to actually get the CSS file.
+                            // Can't get a stream without a full URI.
+                            var requestUri = Flurl.Url.Combine(item.Key, link.GetAttributeValue("href", ""));
+
+                            try
+                            {
+                                // Get the CSS file from the link. This normally runs asynchronously but we're waiting for it to do its thing.
+                                var stream = Client.GetStreamAsync(requestUri).GetAwaiter().GetResult();
+                                var Reader = new StreamReader(stream);
+                                Css = Reader.ReadToEnd();
+                            }
+                            catch (HttpRequestException ex)
+                            {
+                                PageNode.StateImageIndex = (int)StateIcon.Error;
+                                PageNode.ToolTipText = "Error";
+                                PageNode.Nodes.Add(ex.Message);
+                            }
+                        }
+
+                        // Read styles into treeview.
+                        var Stylesheet = Parser.Parse(Css);
+                        if (Stylesheet != null)
+                        {
+                            var SheetNode = new TreeNode(link.GetAttributeValue("href", "File"));
+                            int UsedStyleCount = 0;
+
+                            // Iterate over selectors in the stylesheet, see if they're used in the page they're linked from.
+                            var Rules = Stylesheet.StyleRules.ToList();
+                            for (int RuleIndex = 0; RuleIndex < Rules.Count; RuleIndex++)
+                            {
+                                SetStatus("Parsing Stylesheets: Page {0}/{1}, stylesheet {2}/{3}, rule {4}/{5}.", PageIndex + 1, scan.Pages.Count, LinkIndex + 1, Links.Count, RuleIndex, Rules.Count);
+                                RuleUsage Usage = new RuleUsage(Rules[RuleIndex]);
+                                StateIcon StyleState = StateIcon.Cross;
+                                try
+                                {
+                                    // If the selector appears in the document, we mark it as used.
+                                    int TimesSelectorUsed = item.Value.DocumentNode.QuerySelectorAll(Usage.StyleRule.SelectorText).Count();
+                                    if (TimesSelectorUsed > 0)
+                                    {
+                                        StyleState = StateIcon.Tick;
+                                        Usage = string.Format("Used {0} time{1}.", TimesSelectorUsed, TimesSelectorUsed > 1 ? "s" : "");
+                                        UsedStyleCount++;
+                                    }
+                                }
+                                catch (FormatException ex)
+                                {
+                                    // Fizzler can't read everything. Show an error icon.
+                                    StyleState = StateIcon.Error;
+                                    Usage = ex.Message;
+                                }
+                                finally
+                                {
+                                    TreeNode SelectorNode = new TreeNode(Style.SelectorText) { StateImageIndex = (int)StyleState };
+                                    SelectorNode.ToolTipText = Usage;
+                                    SheetNode.Nodes.Add(SelectorNode);
+                                }
+                            }
+
+                            // Pick an icon for the sheet based on how many, if any, of the selectors in its stylesheets are used.
+                            if (UsedStyleCount == 0)
+                            {
+                                // None are used.
+                                SheetNode.StateImageIndex = (int)StateIcon.Cross;
+                                SheetNode.ToolTipText = "Unused";
+                            }
+                            else if (UsedStyleCount < Stylesheet.StyleRules.Count())
+                            {
+                                // Some are used.
+                                SheetNode.StateImageIndex = (int)StateIcon.Half;
+                                SheetNode.ToolTipText = string.Format("{0} of {1} selectors used.", UsedStyleCount, Rules.Count);
+                            }
+                            else if (UsedStyleCount == Stylesheet.StyleRules.Count())
+                            {
+                                // All are used.
+                                SheetNode.StateImageIndex = (int)StateIcon.Tick;
+                                SheetNode.ToolTipText = string.Format("{0} of {1} selectors used.", UsedStyleCount, Rules.Count);
+                            }
+                            PageNode.Nodes.Add(SheetNode);
+                        }
+                    }
+
+                    StyleList.Nodes.Add(PageNode);
+                }*/
             }
         }
 
@@ -222,9 +307,9 @@ namespace CssScan
         /// <summary>
         /// User has selected (or deselected) an item in the list of pages to scan. Set the "remove" button's ability accordingly.
         /// </summary>
-        private void PageList_SelectedIndexChanged(object sender, EventArgs e)
+        private void PageList_AfterSelect(object sender, EventArgs e)
         {
-            RemovePage.Enabled = PageList.SelectedItem != null;
+            RemovePage.Enabled = PageList.SelectedNode != null && PageList.SelectedNode.Level == 0;
         }
 
         /// <summary>
@@ -232,7 +317,12 @@ namespace CssScan
         /// </summary>
         private void ReadHtmlFiles()
         {
-            // The PageList control has a list of paths, both local and remote. Iterate over it.
+            var Parser = new PageParser();
+            foreach (var scan in Scans)
+            {
+                scan.Pages = Parser.GetLinkedPagesRecursive(scan);
+            }
+            /*/ The PageList control has a list of paths, both local and remote. Iterate over it.
             for (int i = 0; i < PageList.Items.Count; i++)
             {
                 object item = PageList.Items[i];
@@ -261,7 +351,7 @@ namespace CssScan
                 {
                     MessageBox.Show(string.Format("Could not open \"{0}\", it is not a path to a local file or a valid HTTP or HTTPS address.", path), "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-            }
+            }*/
         }
 
         /// <summary>
@@ -269,9 +359,9 @@ namespace CssScan
         /// </summary>
         private void RemovePage_Click(object sender, EventArgs e)
         {
-            if (PageList.SelectedItem != null)
+            if (PageList.SelectedNode != null && PageList.SelectedNode.Level == 0)
             {
-                PageList.Items.RemoveAt(PageList.SelectedIndex);
+                PageList.Nodes.Remove(PageList.SelectedNode);
             }
         }
         /// <summary>

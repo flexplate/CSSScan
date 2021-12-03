@@ -39,13 +39,13 @@ namespace CssScan
             this.AddURI = new System.Windows.Forms.Button();
             this.RemovePage = new System.Windows.Forms.Button();
             this.AddFile = new System.Windows.Forms.Button();
-            this.PageList = new System.Windows.Forms.ListBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.Clear = new System.Windows.Forms.Button();
             this.StyleList = new System.Windows.Forms.TreeView();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.StatusDisplay = new System.Windows.Forms.ToolStripStatusLabel();
+            this.PageList = new System.Windows.Forms.TreeView();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -162,17 +162,6 @@ namespace CssScan
             this.AddFile.Text = "Add &File...";
             this.AddFile.UseVisualStyleBackColor = true;
             // 
-            // PageList
-            // 
-            this.tableLayoutPanel2.SetColumnSpan(this.PageList, 4);
-            this.PageList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PageList.FormattingEnabled = true;
-            this.PageList.ItemHeight = 15;
-            this.PageList.Location = new System.Drawing.Point(3, 3);
-            this.PageList.Name = "PageList";
-            this.PageList.Size = new System.Drawing.Size(932, 295);
-            this.PageList.TabIndex = 1;
-            // 
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.tableLayoutPanel1);
@@ -235,6 +224,15 @@ namespace CssScan
             this.StatusDisplay.Size = new System.Drawing.Size(106, 17);
             this.StatusDisplay.Text = "No pages selected.";
             // 
+            // PageList
+            // 
+            this.tableLayoutPanel2.SetColumnSpan(this.PageList, 4);
+            this.PageList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PageList.Location = new System.Drawing.Point(3, 3);
+            this.PageList.Name = "PageList";
+            this.PageList.Size = new System.Drawing.Size(932, 295);
+            this.PageList.TabIndex = 12;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -267,7 +265,6 @@ namespace CssScan
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Button RemovePage;
         private System.Windows.Forms.Button AddFile;
-        private System.Windows.Forms.ListBox PageList;
         private System.Windows.Forms.Button Start;
         private System.Windows.Forms.Button AddURI;
         private System.Windows.Forms.GroupBox groupBox3;
@@ -276,6 +273,7 @@ namespace CssScan
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel StatusDisplay;
         private System.Windows.Forms.Button Clear;
+        private System.Windows.Forms.TreeView PageList;
     }
 }
 

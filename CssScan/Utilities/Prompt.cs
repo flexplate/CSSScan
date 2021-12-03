@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace CssScan
+namespace CssScan.Utilities
 {
     public static class Prompt
     {
