@@ -7,7 +7,7 @@ Analyse CSS stylesheet usage for a webpage, either locally or remotely. See how 
 ## Current status
 CSSScan will let you check the usage of selectors for all stylesheets referenced from a single page. Future releases will allow link-scraping to check _n_ levels of links from an initial page.
 
-CSSScan uses Fizzler to perform its actual CSS style matching. Currently Fizzler does not support all CSS3 selectors, particularly pseudo-selectors such as `not`. Selectors in your stylesheets that cannot be matched by Fizzler are flagged in your results.
+CSSScan uses [Fizzler](https://github.com/atifaziz/Fizzler) to perform its actual CSS style matching. Currently Fizzler does not support all CSS3 selectors, particularly pseudo-selectors such as `not`. Selectors in your stylesheets that cannot be matched by Fizzler are flagged in your results.
 
 ## Download
 To download the program, [click here](https://github.com/flexplate/CssScan/releases/latest).
